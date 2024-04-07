@@ -7,53 +7,94 @@ import json
 import requests
 load_dotenv()
 
-# Replace this with your OpenAI key
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+from fastapi import FastAPI, Response, Cookie, Request
 
-app = App()
-# app.add("https://twitter.com/aryankeluskar6")
-# app.add("https://www.linkedin.com/in/aryankeluskar/")
-# app.add("https://www.reddit.com/user/Opposite_Volume117/")
-# app.add("https://aryankeluskar.github.io/")
+fast = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+fast.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to your specific requirements
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
-app.reset()
+def newUser(twitter, linkedin, reddit, website):
 
-name = "Aryan Keluskar"
-app.add("https://twitter.com/aryankeluskar6/")
-app.add("https://www.linkedin.com/in/aryankeluskar")
-app.add("https://www.reddit.com/user/Opposite_Volume117/")
-app.add("https://aryankeluskar.github.io/")
+    # name = "Aryan Keluskar"
+    # bio = "attained from user"
+    # age = 18
 
-# app.add("https://www.instagram.com/aryankeluskar/")
-# app.add("https://github.com/aryankeluskar")
-interests = app.query(f"Generate a list of 10 interests of {name} that are separated by commas. make sure one is a hobby and one is a skill and one is a music artist. make sure none are too professional. make sure interests are 2-3 words and specific.")
-# Answer: The net worth of Elon Musk today is $258.7 billion.
-print(interests)
-interests = interests.split(",")
-fav = app.query(f"Based on what you find about {name} and his personality, what do you think would be his favourite places in San Francisco.")
-print(fav)
+    # Replace this with your OpenAI key
+    os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
-data = {
-    "bio": "get from user",
-    "dob": 17,
-    "favSF": fav,
-    "interests": interests,
-    "name": name,
-    "pfp": "get url from verbwire",
-    "sports": ["get from user"],
-}
+    app = App()
+    # app.add("https://twitter.com/aryankeluskar6")
+    # app.add("https://www.linkedin.com/in/aryankeluskar/")
+    # app.add("https://www.reddit.com/user/Opposite_Volume117/")
+    # app.add("https://aryankeluskar.github.io/")
 
-# curl -X POST "https://us-west-2.aws.neurelo.com/rest/user/__one?" -H "X-API-KEY:neurelo_9wKFBp874Z5xFw6ZCfvhXSfHrdMTqOyuqTDVTrzG92wCHpFF8ISlY6sfj4R5TNb0rFm5RUHrLh2VxXEdAbRC/zH/O8ScerCu/L91fmaUYVjJ8+0x5rOh8JJg2d5N+4oA+XDJ2AEQ6LXkuL/686YSeClKgo2ppI5mnjJ5ZWc0uNmD5RsJ2kC7YiVMaecg8drX_iVgAvp3x7mjfQWaahWUDGBdlxCqXeu3q+20GzflpNtQ=" --json "{\r\n            \"bio\": \"Testing.\",\r\n            \"dob\": \"1990-08-09T22:51:56.000Z\",\r\n            \"favSF\": \"Nor\",\r\n            \"interests\": [\r\n                \"Alone Economy.\",\r\n                \"Either Push Force Such.\"\r\n            ],\r\n            \"name\": \"Jermaine Pratt DVM\",\r\n            \"pfp\": \"https://picsum.photos/441/597\",\r\n            \"sports\": [\r\n                \"Staff Gun Strategy Beat.\",\r\n                \"Energy Reach Indeed Amount.\"\r\n            ]\r\n        }"
+    app.reset()
 
-url = "https://us-west-2.aws.neurelo.com/rest/user/__one?"
+    app.add(twitter)
+    app.add(linkedin)
+    app.add(reddit)
+    app.add(website)
 
-headers = {
-    "X-API-KEY": os.getenv("NEURELO")
-}
+    # app.add("https://www.instagram.com/aryankeluskar/")
+    # app.add("https://github.com/aryankeluskar")
+    interests = app.query(f"Generate a list of 10 interests of the given person that are separated by commas. make sure one is a hobby and one is a skill and one is a music artist. make sure none are too professional. make sure interests are 2-3 words and specific.")
+    # Answer: The net worth of Elon Musk today is $258.7 billion.
+    print(interests)
+    interests = interests.split(",")
+    fav = app.query(f"Based on what you find about the person and personality, what do you think would be his or her favourite places in San Francisco.")
+    print(fav)
 
-response = requests.post(url, headers=headers, json=data)
+    url = "https://api.verbwire.com/v1/nft/store/file"
 
-print(response.json())
+    fileUrl = "somefile.jpg"
 
-app.reset()
+    files = { 
+        "filePath": ( fileUrl , open(fileUrl, "rb"), "image/jpg") 
+        }
+
+    headers = {
+        "accept": "application/json",
+        "X-API-Key": os.getenv("VERB_WIRE")
+    }
+
+    responsev = requests.post(url, files=files, headers=headers)
+    responsev = responsev.json()
+
+    verb = responsev['ipfs_storage']['ipfs_url']
+    print(verb)
+
+    # data = {
+    #     "bio": bio,
+    #     "dob": age,
+    #     "favSF": fav,
+    #     "interests": interests,
+    #     "name": name,
+    #     "pfp": verb,
+    #     "sports": ["get from user"],
+    # }
+
+    # url = "https://us-west-2.aws.neurelo.com/rest/user/__one?"
+
+    # headers = {
+    #     "X-API-KEY": os.getenv("NEURELO")
+    # }
+
+    # response = requests.post(url, headers=headers, json=data)
+
+    # print(response.json())
+
+    # app.reset()
+
+    return (interests, fav, verb)
+
+@fast.get("/make")
+async def root(tw = "", li = "", re = "", web = ""):
+    (intarr, favsf, verb) = newUser(tw, li, re, web)
+    return str(intarr)+";0;"+str(favsf)+";0;"+str(verb)
